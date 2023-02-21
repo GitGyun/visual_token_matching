@@ -1,0 +1,5 @@
+*__pycache__*
+experiments*
+model/pretrained_checkpoints*
+support_data.pth
+data_paths.yaml

@@ -1,0 +1,9 @@
+torch==1.12.1
+torchvision==0.13.1
+pytorch_lightning
+timm==0.5.4
+numpy
+scikit-image
+tensorboard
+tqdm
+einops
