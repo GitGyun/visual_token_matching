@@ -1,6 +1,6 @@
 import os
 
-from dataset.taskonomy_constants import TASKS
+from dataset.taskonomy_constants import TASKS, TASKS_GROUP_DICT
 
 from .beit.beit import BEiTEncoder, load_beit_ckpt
 from .dpt.dpt import DPT
@@ -27,22 +27,28 @@ def get_model(config, device=None, verbose=True, load_pretrained=True):
 
 
 def create_image_backbone(config, verbose=True, load_pretrained=True):
-    n_tasks = len(TASKS)
+    if config.stage == 0:
+        n_tasks = len(TASKS)
+    else:
+        if config.task == 'segment_semantic':
+            n_tasks = 1
+        else:
+            n_tasks = len(TASKS_GROUP_DICT[config.task])
     
     backbone = BEiTEncoder(
         config.image_backbone,
-        drop_rate=getattr(config, 'drop_rate', 0.),
-        drop_path_rate=getattr(config, 'drop_path_rate', 0.1),
-        attn_drop_rate=getattr(config, 'attn_drop_rate', 0.),
+        drop_rate=config.drop_rate,
+        drop_path_rate=config.drop_path_rate,
+        attn_drop_rate=config.attn_drop_rate,
         n_tasks=n_tasks,
-        bitfit=getattr(config, 'bitfit', False),
-        n_levels=getattr(config, 'n_levels', 1),
+        n_levels=config.n_levels,
+        bitfit=config.bitfit,
     )
     backbone.dim_hidden = backbone.embed_dim
 
     if load_pretrained and config.image_encoder_weights == 'imagenet':
         ckpt_path = os.path.join('model/pretrained_checkpoints',
-                                    f'{config.image_backbone.replace("in22k", "pt22k")}.pth')
+                                 f'{config.image_backbone.replace("in22k", "pt22k")}.pth')
 
         if getattr(config, 'bitfit', False):
             n_bitfit_tasks = n_tasks

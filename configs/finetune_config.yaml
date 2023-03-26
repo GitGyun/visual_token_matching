@@ -1,0 +1,43 @@
+# environment settings
+seed: 0
+precision: bf16
+strategy: ddp
+
+# data arguments
+dataset: taskonomy
+num_workers: 4
+global_batch_size: 1
+shot: 10
+eval_batch_size: 5
+n_eval_batches: 2
+img_size: 224
+support_idx: 0
+channel_idx: -1
+
+# model arguments
+model: VTM
+semseg_threshold: 0.2
+attn_dropout: 0.5
+
+# training arguments
+n_steps: 20000
+n_schedule_steps: 20000
+optimizer: adam
+lr: 0.005
+lr_schedule: constant 
+lr_warmup: 0
+lr_warmup_scale: 0.
+schedule_from: 0
+weight_decay: 0.
+lr_decay_degree: 0.9
+mask_value: -1.
+early_stopping_patience: 5
+
+# logging arguments
+log_dir: FINETUNE
+save_dir: FINETUNE
+load_dir: TRAIN
+log_iter: 100
+val_iter: 100
+save_iter: 100
+load_step: 0

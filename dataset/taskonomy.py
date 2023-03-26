@@ -3,18 +3,19 @@ import random
 import numpy as np
 import PIL
 from PIL import Image
+from einops import rearrange, repeat
 
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
+
 from .taskonomy_constants import SEMSEG_CLASSES, SEMSEG_CLASS_RANGE, TASKS_GROUP_DICT, TASKS, BUILDINGS
 from .augmentation import RandomHorizontalFlip, FILTERING_AUGMENTATIONS, RandomCompose, Mixup
 from .utils import crop_arrays, SobelEdgeDetector
 
 
 class TaskonomyBaseDataset(Dataset):
-    def __init__(self, root_dir, buildings, tasks,
-                 component='tiny', base_size=(256, 256), img_size=(224, 224), seed=None, precision='fp32'):
+    def __init__(self, root_dir, buildings, tasks, base_size=(256, 256), img_size=(224, 224), seed=None, precision='fp32'):
         super().__init__()
 
         if seed is not None:
@@ -162,9 +163,6 @@ class TaskonomyBaseDataset(Dataset):
             depth_label = self.load_label('depth_euclidean', img_path)
             mask = (depth_label < 64500)
             
-        elif task == 'rot90':
-            label = mask = None
-            
         else:
             raise ValueError(task)
             
@@ -254,12 +252,6 @@ class TaskonomyBaseDataset(Dataset):
         masks = masks.expand_as(labels)
         
         return labels, masks
-
-    def preprocess_rot90(self, imgs):
-        labels = torch.rot90(imgs, k=1, dims=[-2, -1])
-        masks = torch.ones_like(labels)
-
-        return labels, masks
     
     def preprocess_default(self, labels, masks, channels):
         labels = torch.from_numpy(labels).float()
@@ -283,8 +275,6 @@ class TaskonomyBaseDataset(Dataset):
                 channels = SEMSEG_CLASSES
             elif task in TASKS_GROUP_DICT:
                 channels = range(len(TASKS_GROUP_DICT[task]))
-            elif task == 'rot90':
-                channels = range(3)
             else:
                 raise ValueError(task)
             
@@ -300,9 +290,6 @@ class TaskonomyBaseDataset(Dataset):
 
         elif task == 'edge_occlusion':
             labels, masks = self.preprocess_edge_occlusion(labels, masks, channels)
-
-        elif task == 'rot90':
-            labels, masks = self.preprocess_rot90(imgs)
                 
         else:
             labels, masks = self.preprocess_default(labels, masks, channels)
@@ -596,3 +583,104 @@ class TaskonomySegmentationDataset(TaskonomyBaseDataset):
                               random=True)
         
         return X, Y, M
+
+
+class TaskonomyFinetuneDataset(TaskonomyBaseDataset):
+    def __init__(self, root_dir, buildings, task, support_idx, channel_idx, shot,
+                 dset_size=1, image_augmentation=False, fix_seed=False, shuffle_idxs=True, **kwargs):
+        super().__init__(root_dir, buildings, [task], **kwargs)
+        
+        self.task = task
+        self.support_idx = support_idx
+        self.shot = shot
+        self.dset_size = dset_size
+        self.channel_idx = channel_idx
+        self.fix_seed = fix_seed
+        self.shuffle_idxs = shuffle_idxs
+        self.offset = support_idx*shot
+        
+        if image_augmentation:
+            self.image_augmentation = RandomHorizontalFlip()
+        else:
+            self.image_augmentation = None
+            
+        if task == 'segment_semantic':
+            self.img_paths = sorted(os.listdir(os.path.join(self.data_root, 'rgb')))
+            self.class_dict = torch.load(os.path.join(self.meta_info_path, 'class_dict.pth'))
+
+            class_idxs = []
+            for building in buildings:
+                class_idxs += self.class_dict[building][self.channel_idx]
+            self.class_idxs = class_idxs
+
+            perm_path = os.path.join(self.meta_info_path, f'class_perm_finetune_{self.channel_idx}.pth')
+            if not os.path.exists(perm_path):
+                class_perm = torch.randperm(len(self.class_idxs))
+                torch.save(class_perm, perm_path)
+            else:
+                class_perm = torch.load(perm_path)
+            self.class_perm = class_perm
+
+        else:
+            perm_path = os.path.join(self.meta_info_path, 'idxs_perm_finetune.pth')
+            if not os.path.exists(perm_path):
+                idxs_perm = torch.randperm(len(self.img_paths))
+                torch.save(idxs_perm, perm_path)
+            else:
+                idxs_perm = torch.load(perm_path)
+            self.idxs_perm = idxs_perm
+    
+    def __len__(self):
+        return self.dset_size
+    
+    def __getitem__(self, idx):
+        idxs = [(idx % self.shot) + self.offset + i for i in range(self.shot)]
+        random.shuffle(idxs)
+        imgs = []
+        labels = []
+        masks = []
+        for idx_ in idxs:
+            if self.task == 'segment_semantic':
+                if self.shuffle_idxs:
+                    idx_ = self.class_perm[idx_ % len(self.class_idxs)]
+                path_idx = self.class_idxs[idx_]
+                img_path = self.img_paths[path_idx]
+            else:
+                if self.shuffle_idxs:
+                    idx_ = self.idxs_perm[idx_ % len(self.img_paths)]
+                img_path = self.img_paths[idx_]
+
+            # load image, label, and mask
+            img, success = self.load_img(img_path)
+            label, mask = self.load_task(self.task, img_path)
+            if not success:
+                mask = np.zeros_like(label)
+
+            imgs.append(img)
+            labels.append(label)
+            masks.append(mask)
+
+        imgs = np.stack(imgs)
+        labels = np.stack(labels) if labels[0] is not None else None
+        masks = np.stack(masks) if masks[0] is not None else None
+
+        # preprocess labels
+        imgs, labels, masks = self.preprocess_batch(self.task, imgs, labels, masks,
+                                                    channels=([self.channel_idx] if self.channel_idx >= 0 else None),
+                                                    drop_background=True)
+        
+        X = repeat(imgs, 'N C H W -> T N C H W', T=labels.size(1))
+        Y = rearrange(labels, 'N T H W -> T N 1 H W')
+        M = rearrange(masks, 'N T H W -> T N 1 H W')
+        t_idx = torch.arange(len(Y))
+
+        if self.image_augmentation is not None and not self.fix_seed:
+            X, Y, M = self.image_augmentation(X, Y, M)
+        
+        # crop arrays
+        X, Y, M = crop_arrays(X, Y, M,
+                              base_size=self.base_size,
+                              img_size=self.img_size,
+                              random=(not self.fix_seed))
+        
+        return X, Y, M, t_idx

@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 from einops import rearrange
+import math
+
 from dataset.taskonomy_constants import TASKS, TASKS_SEMSEG, SEMSEG_CLASSES
 from .miou_fss import Evaluator
 
@@ -57,9 +59,9 @@ def compute_loss(model, train_data, config):
     X, Y, M, t_idx = train_data
 
     # split the batches into support and query
-    X_S, X_Q = X.split(config.shot, dim=2)
-    Y_S, Y_Q = Y.split(config.shot, dim=2)
-    M_S, M_Q = M.split(config.shot, dim=2)
+    X_S, X_Q = X.split(math.ceil(X.size(2) / 2), dim=2)
+    Y_S, Y_Q = Y.split(math.ceil(Y.size(2) / 2), dim=2)
+    M_S, M_Q = M.split(math.ceil(M.size(2) / 2), dim=2)
 
     # ignore masked region in support label
     Y_S_in = torch.where(M_S.bool(), Y_S, torch.ones_like(Y_S) * config.mask_value)
@@ -83,7 +85,7 @@ def normalize_tensor(input_tensor, dim):
     return out
 
 
-def compute_metric(Y, Y_pred, M, task, miou_evaluator=None):
+def compute_metric(Y, Y_pred, M, task, miou_evaluator=None, stage=0):
     '''
     Compute evaluation metric for each task.
     '''
@@ -98,14 +100,20 @@ def compute_metric(Y, Y_pred, M, task, miou_evaluator=None):
     elif 'segment_semantic' in task:
         assert miou_evaluator is not None
 
-        semseg_class = int(task.split('_')[-1])
-        
-        area_inter, area_union = Evaluator.classify_prediction(Y_pred.clone().cpu().float(), Y.cpu().float())
-        class_id = torch.tensor([SEMSEG_CLASSES.index(semseg_class)]*len(Y_pred))
+        area_inter, area_union = Evaluator.classify_prediction(Y_pred.clone().float(), Y.float())
+        if stage == 0:
+            assert 'segment_semantic' in task
+            semseg_class = int(task.split('_')[-1])
+            class_id = torch.tensor([SEMSEG_CLASSES.index(semseg_class)]*len(Y_pred), device=Y.device)
+        else:
+            class_id = torch.tensor([0]*len(Y_pred), device=Y.device)
+
+        area_inter = area_inter.to(Y.device)
+        area_union = area_union.to(Y.device)
         miou_evaluator.update(area_inter, area_union, class_id)
         
         metric = 0
-        
+
     # Mean Squared Error
     else:
         metric = (M * F.mse_loss(Y, Y_pred, reduction='none').pow(0.5)).mean()

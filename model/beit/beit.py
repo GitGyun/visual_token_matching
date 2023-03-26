@@ -10,7 +10,7 @@ from .beit_factory import create_model as create_custom_model
 class BEiTEncoder(nn.Module):
     def __init__(self, model_name='beit_base_patch16_224_in22k',
                  drop_rate=0.0, drop_path_rate=0.1, attn_drop_rate=0.0,
-                 n_tasks=0, bitfit=False, n_levels=1):
+                 n_tasks=0, bitfit=True, n_levels=1):
         super().__init__()
         self.beit = create_custom_model(
             model_name,
@@ -36,6 +36,13 @@ class BEiTEncoder(nn.Module):
         for key, param in self.beit.named_parameters():
             if key.split('.')[0] == 'blocks' and key.split('.')[-1] == 'bias' and key.split('.')[-3] != 'patch_embed':
                 yield param
+
+    def bias_parameter_names(self):
+        names = []
+        for key, _ in self.beit.named_parameters():
+            if key.split('.')[0] == 'blocks' and key.split('.')[-1] == 'bias' and key.split('.')[-3] != 'patch_embed':
+                names.append(f'beit.{key}')
+        return names
         
     def tokenize(self, x):
         # project image patches to tokens

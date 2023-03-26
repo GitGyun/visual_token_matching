@@ -11,6 +11,14 @@ class VTMImageBackbone(nn.Module):
     def forward(self, x, t_idx=None, **kwargs):
         return forward_6d_as_4d(self.backbone, x, t_idx=t_idx, get_features=True, **kwargs)
 
+    def bias_parameters(self):
+        # bias parameters for similarity adaptation
+        for p in self.backbone.bias_parameters():
+            yield p
+
+    def bias_parameter_names(self):
+        return [f'backbone.{name}' for name in self.backbone.bias_parameter_names()]
+
 
 class VTMLabelBackbone(nn.Module):
     def __init__(self, backbone):
@@ -36,8 +44,7 @@ class VTMLabelBackbone(nn.Module):
 class VTMMatchingModule(nn.Module):
     def __init__(self, dim_w, dim_z, config):
         super().__init__()
-        self.matching = nn.ModuleList([CrossAttention(dim_w, dim_z, dim_z, num_heads=config.n_attn_heads,
-                                                      residual=getattr(config, 'attn_residual', True))
+        self.matching = nn.ModuleList([CrossAttention(dim_w, dim_z, dim_z, num_heads=config.n_attn_heads)
                                        for i in range(config.n_levels)])
         self.n_levels = config.n_levels
             
@@ -70,6 +77,23 @@ class VTM(nn.Module):
         self.matching_module = matching_module
         
         self.n_levels = self.image_backbone.backbone.n_levels
+
+    def bias_parameters(self):
+        # bias parameters for similarity adaptation
+        for p in self.image_backbone.bias_parameters():
+            yield p
+
+    def bias_parameter_names(self):
+        return [f'image_backbone.{name}' for name in self.image_backbone.bias_parameter_names()]
+
+    def pretrained_parameters(self):
+        return self.image_backbone.parameters()
+    
+    def scratch_parameters(self):
+        modules = [self.label_backbone, self.matching_module]
+        for module in modules:
+            for p in module.parameters():
+                yield p
         
     def forward(self, X_S, Y_S, X_Q, t_idx=None, sigmoid=True):
         # encode support input, query input, and support output

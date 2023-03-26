@@ -1,0 +1,25 @@
+# environment settings
+seed: 0
+precision: bf16
+strategy: ddp
+
+# data arguments
+dataset: taskonomy
+test_split: muleshoe
+num_workers: 4
+shot: 10
+eval_batch_size: 8
+n_eval_batches: -1
+img_size: 224
+support_idx: 0
+channel_idx: -1
+
+# model arguments
+model: VTM
+semseg_threshold: 0.2
+
+# logging arguments
+log_dir: TEST
+save_dir: FINETUNE
+load_dir: TRAIN
+load_step: 0
