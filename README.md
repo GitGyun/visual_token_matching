@@ -4,6 +4,8 @@
 
 This repository contains official code for [Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching](https://openreview.net/forum?id=88nT0j5jAn) (ICLR 2023 oral).
 
+![image-VTM](./VTM Overview.png)
+
 ## Setup
 1. Download Taskonomy Dataset (tiny split) from the official github page https://github.com/StanfordVL/taskonomy/tree/master/data.
   * You may download data of `depth_euclidean`, `depth_zbuffer`, `keypoints2d`, `keypoints3d`, `normal`, `principal_curvature`, `reshading`, `segment_semantic`, and `rgb`.
@@ -55,13 +57,12 @@ After the evaluation, you can print the test results by running `python print_re
 
 ## Citation
 If you find this work useful, please consider citing:
-```
-@inproceedings{
-kim2023universal,
-title={Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching},
-author={Donggyun Kim and Jinwoo Kim and Seongwoong Cho and Chong Luo and Seunghoon Hong},
-booktitle={International Conference on Learning Representations},
-year={2023},
-url={https://openreview.net/forum?id=88nT0j5jAn}
+```bib
+@inproceedings{kim2023universal,
+  title={Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching},
+  author={Donggyun Kim and Jinwoo Kim and Seongwoong Cho and Chong Luo and Seunghoon Hong},
+  booktitle={International Conference on Learning Representations},
+  year={2023},
+  url={https://openreview.net/forum?id=88nT0j5jAn}
 }
 ```
