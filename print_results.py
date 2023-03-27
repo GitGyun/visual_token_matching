@@ -82,5 +82,6 @@ if __name__ == '__main__':
     else:
         tasks = [args.task]
 
+    pd.set_option('max_columns', None)
     df = create_table(args.model, tasks, args.name_postfix, print_failure=False)
     print(df)
