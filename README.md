@@ -1,9 +1,8 @@
 # Visual Token Matching
 
-This repository contains official code for [Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching](https://openreview.net/forum?id=88nT0j5jAn) (ICLR 2023 oral).
+(News) Our paper recieved the [Outstanding Paper Award](https://blog.iclr.cc/2023/03/21/announcing-the-iclr-2023-outstanding-paper-award-recipients/) in ICLR 2023!
 
-Currently, we only include codes for our model architecture and episodic training.
-We will release remaining codes (fine-tuning and evaluation) soon.
+This repository contains official code for [Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching](https://openreview.net/forum?id=88nT0j5jAn) (ICLR 2023 oral).
 
 ## Setup
 1. Download Taskonomy Dataset (tiny split) from the official github page https://github.com/StanfordVL/taskonomy/tree/master/data.
@@ -35,10 +34,24 @@ We will release remaining codes (fine-tuning and evaluation) soon.
   * We used `beit_base_patch16_224_pt22k` checkpoint for our experiment.
 
 ## Usage
+
+### Training
 ```
-python main.py --task_fold [0/1/2/3/4]
+python main.py --stage 0 --task_fold [0/1/2/3/4]
 ```
 
+### Fine-tuning
+
+```
+python main.py --stage 1 --task [segment_semantic/normal/depth_euclidean/depth_zbuffer/edge_texture/edge_occlusion/keypoints2d/keypoints3d/reshading/principal_curvature]
+```
+
+### Evaluation
+
+```
+python main.py --stage 2 --task [segment_semantic/normal/depth_euclidean/depth_zbuffer/edge_texture/edge_occlusion/keypoints2d/keypoints3d/reshading/principal_curvature]
+```
+After the evaluation, you can print the test results by running `python print_results.py`
 
 ## Citation
 If you find this work useful, please consider citing:
