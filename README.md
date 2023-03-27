@@ -1,10 +1,10 @@
 # Visual Token Matching
 
-(News) Our paper recieved the [Outstanding Paper Award](https://blog.iclr.cc/2023/03/21/announcing-the-iclr-2023-outstanding-paper-award-recipients/) in ICLR 2023!
+**(News) Our paper received the [Outstanding Paper Award](https://blog.iclr.cc/2023/03/21/announcing-the-iclr-2023-outstanding-paper-award-recipients/) in ICLR 2023!**
 
 This repository contains official code for [Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching](https://openreview.net/forum?id=88nT0j5jAn) (ICLR 2023 oral).
 
-![image-VTM](./VTM Overview.png)
+![image-VTM](https://github.com/GitGyun/visual_token_matching/blob/5c1ddd730dac9e82601e5032c973a9ee0c5bdf4b/VTM%20Overview.png)
 
 ## Setup
 1. Download Taskonomy Dataset (tiny split) from the official github page https://github.com/StanfordVL/taskonomy/tree/master/data.
