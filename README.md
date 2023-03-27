@@ -55,6 +55,12 @@ python main.py --stage 2 --task [segment_semantic/normal/depth_euclidean/depth_z
 ```
 After the evaluation, you can print the test results by running `python print_results.py`
 
+## References
+Our code refers the following repositores:
+* [timm](https://github.com/huggingface/pytorch-image-models/tree/0.5.x)
+* [BEiT: BERT Pre-Training of Image Transformers](https://github.com/microsoft/unilm/tree/master/beit)
+* [Vision Transformers for Dense Prediction](https://github.com/isl-org/DPT)
+
 ## Citation
 If you find this work useful, please consider citing:
 ```bib
