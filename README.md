@@ -8,7 +8,7 @@ This repository contains official code for [Universal Few-shot Learning of Dense
 
 ## Setup
 1. Download Taskonomy Dataset (tiny split) from the official github page https://github.com/StanfordVL/taskonomy/tree/master/data.
-  * You may download data of `depth_euclidean`, `depth_zbuffer`, `keypoints2d`, `keypoints3d`, `normal`, `principal_curvature`, `reshading`, `segment_semantic`, and `rgb`.
+  * You may download data of `depth_euclidean`, `depth_zbuffer`, `edge_occlusion`, `keypoints2d`, `keypoints3d`, `normal`, `principal_curvature`, `reshading`, `segment_semantic`, and `rgb`.
   * (Optional) Resize the images and labels into (256, 256) resolution.
   * To reduce the I/O bottleneck of dataloader, we stored data from all buildings in a single directory. The directory structure looks like:
   ```
