@@ -57,9 +57,13 @@ After the evaluation, you can print the test results by running `python print_re
 
 ## References
 Our code refers the following repositores:
+* [Taskonomy](https://github.com/StanfordVL/taskonomy)
 * [timm](https://github.com/huggingface/pytorch-image-models/tree/0.5.x)
 * [BEiT: BERT Pre-Training of Image Transformers](https://github.com/microsoft/unilm/tree/master/beit)
 * [Vision Transformers for Dense Prediction](https://github.com/isl-org/DPT)
+* [Inverted Pyramid Multi-task Transformer for Dense Scene Understanding](https://github.com/prismformore/Multi-Task-Transformer/tree/main/InvPT)
+* [Hypercorrelation Squeeze for Few-Shot Segmentation](https://github.com/juhongm999/hsnet)
+* [Cost Aggregation with 4D Convolutional Swin Transformer for Few-Shot Segmentation](https://github.com/Seokju-Cho/Volumetric-Aggregation-Transformer)
 
 ## Citation
 If you find this work useful, please consider citing:
