@@ -1,5 +1,9 @@
 # Visual Token Matching
 
+(Update 08/23, 2023)
+We have uploaded pretrained checkpoints in [this link](https://drive.google.com/drive/folders/1FY_zM_x_isBP_I80gJWI9i5Sl6-IR1CC?usp=sharing).
+Meta-trained checkpoints for each fold are included in `TRAIN` directory, and fine-tuned checkpoints for each task (and each channel) are included in `FINETUNE` directory.
+
 **(News) Our paper received the [Outstanding Paper Award](https://blog.iclr.cc/2023/03/21/announcing-the-iclr-2023-outstanding-paper-award-recipients/) in ICLR 2023!**
 
 This repository contains official code for [Universal Few-shot Learning of Dense Prediction Tasks with Visual Token Matching](https://openreview.net/forum?id=88nT0j5jAn) (ICLR 2023 oral).
