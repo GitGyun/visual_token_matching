@@ -61,7 +61,7 @@ def create_image_backbone(config, verbose=True, load_pretrained=True):
 
 
 def create_label_backbone(config):
-    backbone = DPT(config.label_backbone)
+    backbone = DPT(config.label_backbone, pretrained=False)
     backbone.dim_hidden = backbone.embed_dim
         
     return backbone
